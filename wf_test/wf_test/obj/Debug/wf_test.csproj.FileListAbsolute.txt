@@ -1,0 +1,9 @@
+D:\case\UTF_TO_MCU\wf_test\wf_test\bin\Debug\wf_test.exe.config
+D:\case\UTF_TO_MCU\wf_test\wf_test\bin\Debug\wf_test.exe
+D:\case\UTF_TO_MCU\wf_test\wf_test\bin\Debug\wf_test.pdb
+D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.csprojResolveAssemblyReference.cache
+D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.Form1.resources
+D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.Properties.Resources.resources
+D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.csproj.GenerateResource.Cache
+D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.exe
+D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.pdb
