@@ -7,3 +7,12 @@ D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.Properties.Resources.resour
 D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.csproj.GenerateResource.Cache
 D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.exe
 D:\case\UTF_TO_MCU\wf_test\wf_test\obj\Debug\wf_test.pdb
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\bin\Debug\wf_test.exe.config
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.exe
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.pdb
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\bin\Debug\wf_test.exe
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\bin\Debug\wf_test.pdb
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.csprojResolveAssemblyReference.cache
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.Form1.resources
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.Properties.Resources.resources
+C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.csproj.GenerateResource.Cache

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Threading;
 
 namespace wf_test
 {
@@ -134,6 +135,96 @@ namespace wf_test
             testString();
         }
 
+        private void getUtf8BytesFromIdx(int bytes, int idx, byte[] data) {
+            int tmp = 0;
+
+            switch (bytes) { 
+                case 1:
+                    data[0] = (byte)(idx & 0x00ff);
+                    break;
+                case 2:
+                    tmp = (0xC0) + ((idx >> 6) & 0x001F);
+                    data[0] =(byte)(tmp & 0x00ff);
+                    tmp = (0x80) + ((idx) & 0x003F);
+                    data[1] = (byte)(tmp & 0x00ff);
+                    break;
+                case 3:
+                    tmp = (0xE0) + ((idx >> 12) & 0x000F);
+                    data[0] =(byte)(tmp & 0x00ff);
+                    tmp = (0x80) + ((idx>>6) & 0x003F);
+                    data[1] = (byte)(tmp & 0x00ff);
+                    tmp = (0x80) + ((idx) & 0x003F);
+                    data[2] = (byte)(tmp & 0x00ff);
+                    break;
+                case 4:
+                    tmp = (0xF0) + ((idx >> 18) & 0x0007);
+                    data[0] =(byte)(tmp & 0x00ff);
+                    tmp = (0x80) + ((idx>>12) & 0x003F);
+                    data[1] = (byte)(tmp & 0x00ff);
+                    tmp = (0x80) + ((idx) & 0x003F);
+                    data[2] = (byte)(tmp & 0x00ff);
+                    break;
+            }
+        }
+
+        private void testUtf8() {
+            generateUtf8StringInfo(3);
+        }
+
+        delegate void GuiHelper(PictureBox pb,Bitmap bmp,int idx);
+        private void updateGui(PictureBox pb, Bitmap bmp, int idx)
+        {
+            if (pb.InvokeRequired)
+            {
+                GuiHelper gh = new GuiHelper(updateGui);
+                pb.Invoke(gh,pb,bmp, idx);
+            }
+            else {
+                label1.Text = "idx: " + idx;
+                pb.Image = bmp;
+            }
+        }
+
+        private void generateUtf8StringInfo(int bytesCount)
+        {
+            byte[] ba = new byte[bytesCount];
+            ba[0] = 0xe6;
+            ba[1] = 0xb8;
+            ba[2] = 0xac;
+
+            int maxLength = 1;
+            switch (bytesCount)
+            {
+                case 2://5+6=11bit
+                    maxLength <<= 11;
+                    break;
+                case 3://4+6+6=16bit
+                    maxLength <<= 16;
+                    break;
+                case 4://3+6+6+6=21bit
+                    maxLength <<= 21;
+                    break;
+                default:
+                    maxLength = 0;
+                    break;
+            }
+
+            Bitmap bmp = new Bitmap(fontHeight, (int)(fontHeight*1.5));
+            Encoding utf8 = Encoding.UTF8;
+            for (int i = 0; i < maxLength; i++) {
+                getUtf8BytesFromIdx(bytesCount, i, ba);
+                char[] chars = utf8.GetChars(ba);
+                
+                saveOneChar(chars[0], bmp);
+                updateGui(pictureBox,bmp,i);
+                Thread.Sleep(10);
+            }
+
+
+
+            //=====================================================
+        }
+
         private void testString() {
             FileStream infoSw = new FileStream("fontInfo.bin", FileMode.Open);
             FileStream mapSw = new FileStream("fontMap.txt", FileMode.Open);
@@ -208,7 +299,11 @@ namespace wf_test
 
         private void button2_Click(object sender, EventArgs e)
         {
-            generateStringInfo();
+            //generateStringInfo();
+
+            //generateUtf8StringInfo(3);
+            Thread t = new Thread(testUtf8);
+            t.Start();
         }
     }
 }
