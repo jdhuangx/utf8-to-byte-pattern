@@ -16,3 +16,12 @@ C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf
 C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.Form1.resources
 C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.Properties.Resources.resources
 C:\Users\JiDe\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.csproj.GenerateResource.Cache
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\bin\Debug\wf_test.exe.config
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.exe
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.pdb
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\bin\Debug\wf_test.exe
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\bin\Debug\wf_test.pdb
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.csprojResolveAssemblyReference.cache
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.Form1.resources
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.Properties.Resources.resources
+C:\Users\jdhua\Documents\GitHub\utf8-to-byte-pattern\wf_test\wf_test\obj\Debug\wf_test.csproj.GenerateResource.Cache

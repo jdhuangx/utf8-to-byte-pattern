@@ -28,6 +28,17 @@ namespace wf_test
         int fontHeight;
         int fontWeight;
 
+        //https://blog.longwin.com.tw/2013/12/unicode-utf8-char-range-table-2013/
+        int[] requireRangeMin = { 0x0020, 0x002E80 };
+        int[] requireRangeMax = { 0x007f, 0x00FFFF };
+        int[] byteCountArray = { 1, 3 };
+
+        /*
+        int[] requireRangeMin = { 0x0020 };
+        int[] requireRangeMax = { 0x007f };
+        int[] byteCountArray = { 1};
+        */
+
         public Form1()
         {
             InitializeComponent();
@@ -46,7 +57,7 @@ namespace wf_test
             fontHeight = (int)Math.Ceiling(stringSize.Height);
         }
 
-        private void saveOneChar(char c, Bitmap bmp) {
+        private void drawOneChar(char c, Bitmap bmp) {
             Graphics g = Graphics.FromImage(bmp);
 
             g.Clear(Color.Black);
@@ -54,8 +65,8 @@ namespace wf_test
             g.Flush();
         }
 
-        private int saveCharInfo(int idx, FileStream info, char c, Bitmap bmp) {
-            saveOneChar(c,bmp);
+        private int saveCharInfo(FileStream info, char c, Bitmap bmp) {
+            drawOneChar(c,bmp);
 
             stringSize = tmpGraphicForMeas.MeasureString(c.ToString(), drawFont);
             fontHeight = (int)Math.Ceiling(stringSize.Height);
@@ -89,7 +100,7 @@ namespace wf_test
         }
 
         private void saveMap(FileStream mapSw, int i, int idx,int byteCount) {
-            mapSw.Seek(i * 10, SeekOrigin.Begin);
+            //char utf8 address
             int byte1 = ((i) >> 24) & 0x00ff;
             int byte2 = ((i) >> 16) & 0x00ff;
             int byte3 = ((i) >> 8) & 0x00ff;
@@ -98,6 +109,7 @@ namespace wf_test
             mapSw.WriteByte((byte)byte2);
             mapSw.WriteByte((byte)byte3);
             mapSw.WriteByte((byte)byte4);
+            //address in font info file
             byte1 = ((idx) >> 24) & 0x00ff;
             byte2 = ((idx) >> 16) & 0x00ff;
             byte3 = ((idx) >> 8) & 0x00ff;
@@ -106,12 +118,13 @@ namespace wf_test
             mapSw.WriteByte((byte)byte2);
             mapSw.WriteByte((byte)byte3);
             mapSw.WriteByte((byte)byte4);
+            //size
             byte1 = ((byteCount) >> 8) & 0x00ff;
             byte2 = (byteCount & 0x00ff);
             mapSw.WriteByte((byte)byte1);
             mapSw.WriteByte((byte)byte2);
         }
-
+        /*
         private void generateStringInfo() {
             FileStream infoSw = new FileStream("fontInfo.bin", FileMode.Create);
             FileStream mapSw = new FileStream("fontMap.txt", FileMode.Create);
@@ -133,7 +146,7 @@ namespace wf_test
             mapSw.Close();
 
             testString();
-        }
+        }*/
 
         private void getUtf8BytesFromIdx(int bytes, int idx, byte[] data) {
             int tmp = 0;
@@ -168,7 +181,7 @@ namespace wf_test
         }
 
         private void testUtf8() {
-            generateUtf8StringInfo(3);
+            generateUtf8StringInfo(byteCountArray, requireRangeMin, requireRangeMax);
         }
 
         delegate void GuiHelper(PictureBox pb,Bitmap bmp,int idx);
@@ -185,44 +198,73 @@ namespace wf_test
             }
         }
 
-        private void generateUtf8StringInfo(int bytesCount)
+        private void generateUtf8StringInfo(int[] bytesCount,int[] minAddr,int[] maxAddr)
         {
-            byte[] ba = new byte[bytesCount];
-            ba[0] = 0xe6;
-            ba[1] = 0xb8;
-            ba[2] = 0xac;
+            FileStream infoSw = new FileStream("fontInfo.bin", FileMode.Create);
+            FileStream mapSw = new FileStream("fontMap.txt", FileMode.Create);
 
-            int maxLength = 1;
-            switch (bytesCount)
-            {
-                case 2://5+6=11bit
-                    maxLength <<= 11;
-                    break;
-                case 3://4+6+6=16bit
-                    maxLength <<= 16;
-                    break;
-                case 4://3+6+6+6=21bit
-                    maxLength <<= 21;
-                    break;
-                default:
-                    maxLength = 0;
-                    break;
-            }
+            //save 100 byte for meta data
+            mapSw.Seek(100,SeekOrigin.Begin);
+            int[] beginAddressOfMapSegment = new int[bytesCount.Length];
 
-            Bitmap bmp = new Bitmap(fontHeight, (int)(fontHeight*1.5));
             Encoding utf8 = Encoding.UTF8;
-            for (int i = 0; i < maxLength; i++) {
-                getUtf8BytesFromIdx(bytesCount, i, ba);
-                char[] chars = utf8.GetChars(ba);
-                
-                saveOneChar(chars[0], bmp);
-                updateGui(pictureBox,bmp,i);
-                Thread.Sleep(10);
+
+            int fileIdx = 0;
+            int mapIdx = 0;
+            for(int a = 0; a < minAddr.Length; a++) {
+                byte[] ba = new byte[bytesCount[a]];
+                beginAddressOfMapSegment[a] = (int)mapSw.Position;
+
+                for (int i = minAddr[a]; i <= maxAddr[a]; i++)
+                {
+                    getUtf8BytesFromIdx(bytesCount[a], i, ba);
+                    char[] chars = utf8.GetChars(ba);
+
+                    Bitmap bmp = new Bitmap(fontHeight * 2, fontHeight * 2);
+                    drawOneChar(chars[0], bmp);
+
+                    int byteCount = saveCharInfo(infoSw, chars[0], bmp);
+                    saveMap(mapSw, i, fileIdx, byteCount);
+                    fileIdx += byteCount;
+
+
+                    updateGui(pictureBox, bmp, i);
+                    Thread.Sleep(5);
+                }
             }
 
 
+            //save meta data
+            //[font segment begin address][address of each segment in map file]
+            mapSw.Seek(0, SeekOrigin.Begin);
+            mapSw.WriteByte((byte)(bytesCount.Length));
+            for (int i = 0; i < bytesCount.Length; i++)
+            {
+                int beginAddr = minAddr[i];
+                int byte1 = ((beginAddr) >> 24) & 0x00ff;
+                int byte2 = ((beginAddr) >> 16) & 0x00ff;
+                int byte3 = ((beginAddr) >> 8) & 0x00ff;
+                int byte4 = (beginAddr & 0x00ff);
+                mapSw.WriteByte((byte)byte1);
+                mapSw.WriteByte((byte)byte2);
+                mapSw.WriteByte((byte)byte3);
+                mapSw.WriteByte((byte)byte4);
 
-            //=====================================================
+                int mapAddress = beginAddressOfMapSegment[i];
+                byte1 = ((mapAddress) >> 24) & 0x00ff;
+                byte2 = ((mapAddress) >> 16) & 0x00ff;
+                byte3 = ((mapAddress) >> 8) & 0x00ff;
+                byte4 = (mapAddress & 0x00ff);
+                mapSw.WriteByte((byte)byte1);
+                mapSw.WriteByte((byte)byte2);
+                mapSw.WriteByte((byte)byte3);
+                mapSw.WriteByte((byte)byte4);
+            }
+
+            infoSw.Flush();
+            infoSw.Close();
+            mapSw.Flush();
+            mapSw.Close();
         }
 
         private void testString() {
@@ -232,7 +274,37 @@ namespace wf_test
             String test = "R";
             int utf8Idx= Convert.ToInt32(test[0]);
 
-            mapSw.Seek((utf8Idx * 10)+4, SeekOrigin.Begin);
+            //read meta data
+            int segmentCount = mapSw.ReadByte();
+            int[] fontbeginAddress = new int[segmentCount];
+            int[] mapBeginAddress = new int[segmentCount];
+            for (int i = 0; i < segmentCount; i++) {
+                int aaa = 0;
+                aaa += mapSw.ReadByte(); aaa <<= 8;
+                aaa += mapSw.ReadByte(); aaa <<= 8;
+                aaa += mapSw.ReadByte(); aaa <<= 8;
+                aaa += mapSw.ReadByte();
+                fontbeginAddress[i] = aaa;
+
+                aaa = 0;
+                aaa += mapSw.ReadByte(); aaa <<= 8;
+                aaa += mapSw.ReadByte(); aaa <<= 8;
+                aaa += mapSw.ReadByte(); aaa <<= 8;
+                aaa += mapSw.ReadByte();
+                mapBeginAddress[i] = aaa;
+            }
+
+            int selectSegment = (segmentCount - 1);
+            for (int i = 0; i < (segmentCount-1); i++) {
+                if(utf8Idx>= fontbeginAddress[i] && utf8Idx < fontbeginAddress[i + 1])
+                {
+                    selectSegment = i;
+                    break;
+                }
+            }
+            utf8Idx -= fontbeginAddress[selectSegment];
+
+            mapSw.Seek((utf8Idx * 10)+4+ mapBeginAddress[selectSegment], SeekOrigin.Begin);
             int idx = 0;
             idx += mapSw.ReadByte(); idx <<= 8;
             idx += mapSw.ReadByte(); idx <<= 8;
@@ -291,7 +363,7 @@ namespace wf_test
             fontWeight = (int)Math.Ceiling(stringSize.Width);
 
             Bitmap bmp = new Bitmap(fontWeight, fontHeight);
-            saveOneChar(str[0],bmp);
+            drawOneChar(str[0],bmp);
 
             pictureBox.Image = bmp;
             testString();
