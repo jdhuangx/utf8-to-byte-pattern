@@ -15,7 +15,7 @@ namespace wf_test
     public partial class Form1 : Form
     {
         //int fontSize = 14;
-        int fontSize = 12;
+        int fontSize = 16;
 
         Font drawFont;
         SolidBrush drawBrush;
@@ -29,18 +29,12 @@ namespace wf_test
         int fontWeight;
 
         //https://blog.longwin.com.tw/2013/12/unicode-utf8-char-range-table-2013/
-        /*
-        int[] requireRangeMin = { 0x0020};
-        int[] requireRangeMax = { 0x007f};
-        int[] byteCountArray = { 1 };
-        */
-        
         int[] requireRangeMin = { 0x0020, 0x002E80, 0x00F900};
         int[] requireRangeMax = { 0x007f, 0x009FFF, 0x00FE4F};
         int[] byteCountArray = { 1, 3,3};
-        
 
         /*
+        //asciionly
         int[] requireRangeMin = { 0x0020 };
         int[] requireRangeMax = { 0x007f };
         int[] byteCountArray = { 1};
@@ -55,12 +49,12 @@ namespace wf_test
         }
 
         private void initParam() {
-            drawFont = new Font("Arial", fontSize);
+            drawFont = new Font("msjh", fontSize);
             drawBrush = new SolidBrush(System.Drawing.Color.White);
 
             tmpBitmap = new Bitmap(10, 10);
             tmpGraphicForMeas = Graphics.FromImage(tmpBitmap);
-            stringSize = tmpGraphicForMeas.MeasureString("測試", drawFont);
+            stringSize = tmpGraphicForMeas.MeasureString("測試abcdejT", drawFont);
             fontHeight = (int)Math.Ceiling(stringSize.Height);
         }
 
@@ -76,7 +70,6 @@ namespace wf_test
             drawOneChar(c,bmp);
 
             stringSize = tmpGraphicForMeas.MeasureString(c.ToString(), drawFont);
-            fontHeight = (int)Math.Ceiling(stringSize.Height);
             fontWeight = (int)Math.Ceiling(stringSize.Width);
 
             //測試顯示font size=14的時候，實際的文字高度為24，用3byte表示一列pixel
@@ -85,6 +78,7 @@ namespace wf_test
             for (int x = 0; x < fontWeight; x++) {
                 //check colume
                 /*
+                //remove leading and tailing blank line
                 bool isBlankLine = false;
                 for (int y = 0; y < fontHeight; y++)
                 {
@@ -107,21 +101,12 @@ namespace wf_test
             return byteCount;
         }
 
-        private void saveMap(FileStream mapSw, int i, int idx,int byteCount) {
-            //char utf8 address
-            int byte1 = ((i) >> 24) & 0x00ff;
-            int byte2 = ((i) >> 16) & 0x00ff;
-            int byte3 = ((i) >> 8) & 0x00ff;
-            int byte4 = (i & 0x00ff);
-            mapSw.WriteByte((byte)byte1);
-            mapSw.WriteByte((byte)byte2);
-            mapSw.WriteByte((byte)byte3);
-            mapSw.WriteByte((byte)byte4);
+        private void saveMap(FileStream mapSw, int idx,int byteCount) {
             //address in font info file
-            byte1 = ((idx) >> 24) & 0x00ff;
-            byte2 = ((idx) >> 16) & 0x00ff;
-            byte3 = ((idx) >> 8) & 0x00ff;
-            byte4 = (idx & 0x00ff);
+            int byte1 = ((idx) >> 24) & 0x00ff;
+            int byte2 = ((idx) >> 16) & 0x00ff;
+            int byte3 = ((idx) >> 8) & 0x00ff;
+            int byte4 = (idx & 0x00ff);
             mapSw.WriteByte((byte)byte1);
             mapSw.WriteByte((byte)byte2);
             mapSw.WriteByte((byte)byte3);
@@ -132,29 +117,6 @@ namespace wf_test
             mapSw.WriteByte((byte)byte1);
             mapSw.WriteByte((byte)byte2);
         }
-        /*
-        private void generateStringInfo() {
-            FileStream infoSw = new FileStream("fontInfo.bin", FileMode.Create);
-            FileStream mapSw = new FileStream("fontMap.txt", FileMode.Create);
-            Bitmap bmp = new Bitmap(fontHeight * 2, fontHeight*2);
-
-            //create ascii info
-            int idx = 0;
-            int byteCount = 0;
-            for (int i = 32; i < 127; i++) {
-                char c=Convert.ToChar(i);
-                byteCount = saveCharInfo(idx,infoSw,c, bmp);
-                saveMap(mapSw,i,idx, byteCount);
-                idx += byteCount;
-            }
-
-            infoSw.Flush();
-            infoSw.Close();
-            mapSw.Flush();
-            mapSw.Close();
-
-            testString();
-        }*/
 
         private void getUtf8BytesFromIdx(int bytes, int idx, byte[] data) {
             int tmp = 0;
@@ -244,7 +206,7 @@ namespace wf_test
         private void generateUtf8StringInfo(int[] bytesCount,int[] minAddr,int[] maxAddr)
         {
             FileStream infoSw = new FileStream("fontInfo.bin", FileMode.Create);
-            FileStream mapSw = new FileStream("fontMap.txt", FileMode.Create);
+            FileStream mapSw = new FileStream("fontMap.bin", FileMode.Create);
 
             //save 100 byte for meta data
             mapSw.Seek(100,SeekOrigin.Begin);
@@ -263,19 +225,18 @@ namespace wf_test
                     getUtf8BytesFromIdx(bytesCount[a], i, ba);
                     char[] chars = utf8.GetChars(ba);
 
+                    //create a tmp bitmap to avoid dual threads access the same bitmap 
                     Bitmap bmp = new Bitmap(fontHeight * 2, fontHeight * 2);
                     drawOneChar(chars[0], bmp);
 
                     int byteCount = saveCharInfo(infoSw, chars[0], bmp);
-                    saveMap(mapSw, i, fileIdx, byteCount);
+                    saveMap(mapSw, fileIdx, byteCount);
                     fileIdx += byteCount;
 
-
+                    //Thread.Sleep(100);
                     updateGui(pictureBox, bmp, i);
-                    //Thread.Sleep(1);
                 }
             }
-
 
             //save meta data
             //[font segment begin address][address of each segment in map file]
@@ -313,13 +274,10 @@ namespace wf_test
 
         private void testString() {
             FileStream infoSw = new FileStream("fontInfo.bin", FileMode.Open);
-            FileStream mapSw = new FileStream("fontMap.txt", FileMode.Open);
+            FileStream mapSw = new FileStream("fontMap.bin", FileMode.Open);
 
             String test = textBox1.Text;
             int utf8Idx = Convert.ToInt32(test[0]);
-
-            //byte[] ba = { 0xE6 ,0xB8 ,0xAC };
-            //int utf8Idx = getIdxFromUtf8Bytes(ba);
 
             //read meta data
             int testFontHeight = mapSw.ReadByte();
@@ -352,7 +310,7 @@ namespace wf_test
             }
             utf8Idx -= fontbeginAddress[selectSegment];
 
-            mapSw.Seek((utf8Idx * 10)+4+ mapBeginAddress[selectSegment], SeekOrigin.Begin);
+            mapSw.Seek((utf8Idx * 6) + mapBeginAddress[selectSegment], SeekOrigin.Begin);
             int idx = 0;
             idx += mapSw.ReadByte(); idx <<= 8;
             idx += mapSw.ReadByte(); idx <<= 8;
@@ -420,9 +378,8 @@ namespace wf_test
 
         private void button2_Click(object sender, EventArgs e)
         {
-            //generateStringInfo();
-
-            //generateUtf8StringInfo(3);
+            fontSize = Int32.Parse(textBox2.Text);
+            initParam();
             Thread t = new Thread(testUtf8);
             t.Start();
         }
