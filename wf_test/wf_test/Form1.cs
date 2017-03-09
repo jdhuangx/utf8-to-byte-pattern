@@ -26,7 +26,7 @@ namespace wf_test
         SizeF stringSize = new SizeF();
 
         int fontHeight;
-        int fontWeight;
+        int fontWidth;
 
         //https://blog.longwin.com.tw/2013/12/unicode-utf8-char-range-table-2013/
         int[] requireRangeMin = { 0x0020, 0x002E80, 0x00F900};
@@ -70,12 +70,12 @@ namespace wf_test
             drawOneChar(c,bmp);
 
             stringSize = tmpGraphicForMeas.MeasureString(c.ToString(), drawFont);
-            fontWeight = (int)Math.Ceiling(stringSize.Width);
+            fontWidth = (int)Math.Ceiling(stringSize.Width);
 
             //測試顯示font size=14的時候，實際的文字高度為24，用3byte表示一列pixel
             //後來我改為一個pixel記錄一個byte做灰階
             int byteCount = 0;
-            for (int x = 0; x < fontWeight; x++) {
+            for (int y = 0; y < fontHeight; y++) {
                 //check colume
                 /*
                 //remove leading and tailing blank line
@@ -91,7 +91,7 @@ namespace wf_test
                     continue;
                 }*/
 
-                for (int y = 0; y < fontHeight; y++)
+                for (int x = 0; x < fontWidth; x++)
                 {
                     int test = (bmp.GetPixel(x, y).R & 0x00ff);
                     info.WriteByte((byte)(bmp.GetPixel(x, y).R & 0x00ff));
@@ -338,9 +338,9 @@ namespace wf_test
             Bitmap bmp = new Bitmap(width, height);
 
             int idx = 0;
-            for (int x = 0; x < width; x++) {
+            for (int y = 0; y <  height; y++) {
 
-                for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
                     byte b = (byte)info[idx++];
 
                     if (b == 0)
@@ -366,9 +366,9 @@ namespace wf_test
 
             stringSize = tmpGraphicForMeas.MeasureString(str[0].ToString(), drawFont);
             fontHeight = (int)Math.Ceiling(stringSize.Height);
-            fontWeight = (int)Math.Ceiling(stringSize.Width);
+            fontWidth = (int)Math.Ceiling(stringSize.Width);
 
-            Bitmap bmp = new Bitmap(fontWeight, fontHeight);
+            Bitmap bmp = new Bitmap(fontWidth, fontHeight);
             drawOneChar(str[0],bmp);
 
             pictureBox.Image = bmp;
